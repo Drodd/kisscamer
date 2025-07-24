@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=720, height=1280, user-scalable=no">
+    <title>Kiss Camera 模拟器</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="viewport-container">
+        <div class="game-container">
+        <!-- 直播屏幕 -->
+        <div class="live-screen-container">
+            <div class="live-screen" id="liveScreen">
+                <div class="live-content" id="liveContent"></div>
+            </div>
+        </div>
+
+        <!-- 游戏场景 -->
+        <div class="game-scene">
+            <div class="background-far" id="backgroundFar"></div>
+            <div class="background-near" id="backgroundNear"></div>
+        </div>
+
+        <!-- 取景器 -->
+        <div class="viewfinder-container">
+            <div class="viewfinder" id="viewfinder">
+                <div class="viewfinder-content" id="viewfinderContent">
+                    <div class="audience-layer" id="audienceLayer"></div>
+                    <div class="foreground-layer" id="foregroundLayer"></div>
+                </div>
+            </div>
+            <div class="viewfinder-overlay" id="viewfinderOverlay"></div>
+            
+            <!-- 左右移动按钮 -->
+            <button class="arrow-btn arrow-left" id="moveLeftBtn"></button>
+            <button class="arrow-btn arrow-right" id="moveRightBtn"></button>
+            
+            <!-- 推送按钮 -->
+            <button class="push-btn" id="pushBtn">推送画面</button>
+        </div>
+
+        <!-- 强化任务完成数量显示 -->
+        <div class="score-display">
+            <span id="score">0</span>
+        </div>
+
+        <!-- 任务信息叠加在直播屏幕上方 -->
+        <div class="task-overlay">
+            <div class="task-name" id="taskName">准备中...</div>
+            <div class="task-timer" id="taskTimer">15</div>
+        </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,600 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #000;
+    color: #fff;
+    overflow: hidden;
+    height: 100vh;
+    touch-action: manipulation;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 固定分辨率容器 */
+.game-container {
+    position: relative;
+    width: 720px;
+    height: 1280px;
+    background: #111;
+    overflow: hidden;
+    transform-origin: center center;
+    flex-shrink: 0;
+}
+
+/* 响应式缩放容器 */
+.viewport-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+}
+
+/* 直播屏幕 */
+.live-screen-container {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: #111;
+    border: 4px solid #fff;
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.live-screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+}
+
+.live-content {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.live-content.active {
+    opacity: 1;
+}
+
+/* 游戏场景 */
+.game-scene {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.background-far {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 120%;
+    height: 100%;
+    background-image: url('imgs/img_bg1.png');
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 1;
+    transition: transform 0.3s ease;
+    transform: translateX(-10%); /* 初始居中显示 */
+}
+
+.background-near {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40%;
+    background-image: url('imgs/img_bg2.png');
+    background-size: cover;
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    z-index: 2;
+    transition: transform 0.3s ease;
+}
+
+/* 取景器 */
+.viewfinder-container {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    width: 640px;
+    height: 480px;
+}
+
+.viewfinder {
+    width: 600px;
+    height: 480px;
+    left: 10%;
+    background: #222;
+    overflow: hidden;
+    position: relative;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.viewfinder-overlay {
+    position: absolute;
+    bottom: -5%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120%;
+    height: 115%;
+    background-image: url('imgs/img_cam.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center top;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.viewfinder-content {
+    position: relative;
+    bottom: 15%;
+    width: 400%; /* 扩展为4倍宽度确保无缝循环 */
+    height: 100%;
+    background-image: url('imgs/img_cam_bg1.png');
+    background-size: auto 100%;
+    background-position: left center;
+    background-repeat: repeat-x;
+    z-index: 1;
+    transition: transform 0.3s ease;
+}
+
+.audience-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.audience-member {
+    position: absolute;
+    width: auto;
+    height: 90%; /* 相对容器高度的90%，跟随img_cam_bg1高度 */
+    aspect-ratio: 3/4; /* 保持原始宽高比 */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: bottom center;
+    bottom: 10%;
+    left: 0;
+    transform-origin: bottom center;
+}
+
+/* 控制按钮 */
+.controls {
+    display: flex;
+    justify-content: space-between;
+    margin-top: -20px;
+    gap: 10px;
+    position: relative;
+    z-index: 15;
+}
+
+.control-btn {
+    flex: 1;
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.control-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.control-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+}
+
+.control-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* 强化任务完成数量显示 */
+.score-display {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 15;
+    font-size: 32px;
+    font-weight: 900;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 10px 20px;
+    border-radius: 50px;
+    min-width: 60px;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+/* 任务信息叠加在直播屏幕上方 */
+.task-overlay {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    pointer-events: none;
+}
+
+.task-name {
+    font-size: 36px;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 12px 24px;
+    border-radius: 25px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.task-timer {
+    font-size: 48px;
+    font-weight: 900;
+    color: #ff4444;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 15px 30px;
+    border-radius: 50px;
+    min-width: 100px;
+    text-align: center;
+    transition: all 0.3s ease;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.task-timer.urgent {
+    color: #ff0000;
+    background: rgba(0, 0, 0, 0.95);
+    font-size: 42px;
+    animation: urgentPulse 0.5s infinite;
+}
+
+@keyframes urgentPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* 任务完成动画 */
+.task-complete-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.task-complete-text {
+    font-size: 48px;
+    font-weight: 900;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 40px 60px;
+    border-radius: 20px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    animation: taskCompleteEnter 0.8s ease-out;
+}
+
+@keyframes taskCompleteEnter {
+    0% {
+        opacity: 0;
+        transform: scale(0.5) translateY(-100px);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.1) translateY(0);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* 扁平简约控制按钮 */
+.control-btn {
+    flex: 1;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.control-btn:active {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(0.95);
+}
+
+.control-btn:disabled {
+    background: rgba(128, 128, 128, 0.3);
+    border-color: rgba(128, 128, 128, 0.5);
+    color: rgba(255, 255, 255, 0.5);
+    cursor: not-allowed;
+}
+
+/* 推送按钮样式 */
+.push-btn {
+    position: absolute;
+    bottom: 0%;
+    left: 53%;
+    transform: translateX(-50%);
+    padding: 25px 50px;
+    background: rgba(220, 53, 69, 0.9);
+    color: #fff;
+    border: 2px solid rgba(220, 53, 69, 1);
+    border-radius: 35px;
+    font-size: 24px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    z-index: 100;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+
+.push-btn:active {
+    transform: translateX(-50%) scale(0.95);
+}
+
+.push-btn:disabled {
+    background: rgba(220, 53, 69, 0.3);
+    border-color: rgba(220, 53, 69, 0.5);
+    cursor: not-allowed;
+}
+
+/* 三角形箭头按钮样式 */
+.arrow-btn {
+    position: absolute;
+    top: 50%;
+    margin-top: -30px;
+    width: 0;
+    height: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    z-index: 100;
+    transition: transform 0.2s ease;
+}
+
+.arrow-left {
+    left:50px;
+    border-top: 30px solid transparent;
+    border-bottom: 30px solid transparent;
+    border-right: 45px solid rgba(255, 255, 255, 0.8);
+}
+
+.arrow-right {
+    right: 0px;
+    border-top: 30px solid transparent;
+    border-bottom: 30px solid transparent;
+    border-left: 45px solid rgba(255, 255, 255, 0.8);
+}
+
+.arrow-btn:active {
+    transform: scale(0.9);
+}
+
+.arrow-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* 扁平简约直播屏幕 */
+.live-screen-container {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .live-screen-container {
+        width: 200px;
+        height: 200px;
+        top: 10px;
+    }
+    
+    .viewfinder {
+        aspect-ratio: 4/3;
+        max-height: 60vh;
+    }
+    
+    .game-info {
+        top: 220px;
+        font-size: 12px;
+        gap: 20px;
+        padding: 8px 15px;
+    }
+    
+    .task-info {
+        top: 260px;
+        font-size: 12px;
+        padding: 10px 15px;
+        min-width: 200px;
+    }
+    
+    .task-name {
+        font-size: 14px;
+    }
+    
+    .task-timer {
+        font-size: 16px;
+    }
+    
+    .control-btn {
+        padding: 12px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .live-screen-container {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .viewfinder {
+        aspect-ratio: 4/3;
+        max-height: 50vh;
+    }
+    
+    .game-info {
+        top: 170px;
+        flex-direction: column;
+        gap: 5px;
+        align-items: center;
+    }
+    
+    .controls {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .control-btn {
+        padding: 10px;
+        font-size: 12px;
+    }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.live-content.active {
+    animation: pulse 0.5s ease-in-out;
+}
+
+.audience-member.highlight {
+    animation: pulse 1s ease-in-out infinite;
+}
+
+.audience-member.reacting {
+    animation: coupleReact 0.3s ease-in-out;
+    transform: scale(1.1);
+}
+
+@keyframes coupleReact {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1.1); }
+}
+
+/* 前景层 */
+.foreground-layer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 400%; /* 扩展为原来的4倍确保全覆盖 */
+    height: 100%;
+    background-image: url('./imgs/img_cam_bg2.png');
+    background-size: auto 100%;
+    background-position: left bottom;
+    background-repeat: repeat-x;
+    z-index: 4;
+    pointer-events: none;
+    transition: transform 0.3s ease;
+}
+
+/* 调整观众层层级，确保在前景层下方 */
+.audience-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* 移除原有的取景器边框样式，使用img_cam作为边框 */
+.viewfinder.recording {
+    border-color: #ff4444;
+}

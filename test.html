@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiss Camera 测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f0f0f0;
+        }
+        .test-info {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .device-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <h2>Kiss Camera 模拟器 - 移动端测试</h2>
+        <div class="device-info" id="deviceInfo">
+            <p><strong>设备信息：</strong></p>
+            <p id="screenSize">屏幕尺寸: 检测中...</p>
+            <p id="orientation">屏幕方向: 检测中...</p>
+            <p id="userAgent">用户代理: 检测中...</p>
+        </div>
+        <p><strong>测试说明：</strong></p>
+        <ul>
+            <li>请确保使用竖屏模式</li>
+            <li>点击"进入游戏"按钮开始测试</li>
+            <li>使用左右按钮移动取景器</li>
+            <li>寻找并捕捉情侣（高亮显示）</li>
+            <li>点击"推送画面"将画面发送到直播屏幕</li>
+        </ul>
+        
+        <a href="index.html" style="display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; margin: 10px 0;">进入游戏测试</a>
+    </div>
+
+    <script>
+        // 检测设备信息
+        function detectDeviceInfo() {
+            const screenSize = document.getElementById('screenSize');
+            const orientation = document.getElementById('orientation');
+            const userAgent = document.getElementById('userAgent');
+            
+            screenSize.textContent = `屏幕尺寸: ${window.screen.width}x${window.screen.height}`;
+            orientation.textContent = `屏幕方向: ${window.screen.orientation.type || '未知'}`;
+            userAgent.textContent = `用户代理: ${navigator.userAgent.substring(0, 100)}...`;
+            
+            // 检测是否为移动设备
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                document.querySelector('.device-info').innerHTML += `<p style="color: green; font-weight: bold;">✓ 检测到移动设备</p>`;
+            } else {
+                document.querySelector('.device-info').innerHTML += `<p style="color: orange; font-weight: bold;">⚠ 检测到桌面设备，请使用移动设备测试</p>`;
+            }
+        }
+        
+        detectDeviceInfo();
+        
+        // 监听方向变化
+        if (window.screen.orientation) {
+            window.screen.orientation.addEventListener('change', detectDeviceInfo);
+        }
+    </script>
+</body>
+</html>

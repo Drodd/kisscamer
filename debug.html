@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前景层调试页面</title>
+    <style>
+        .debug-viewfinder {
+            width: 640px;
+            height: 480px;
+            border: 2px solid #ccc;
+            margin: 20px;
+            position: relative;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+        .debug-foreground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 200%;
+            height: 120px;
+            background-image: url('imgs/img_cam_bg2.png');
+            background-size: contain;
+            background-position: left bottom;
+            background-repeat: repeat-x;
+            border: 1px solid red;
+        }
+        .debug-info {
+            margin: 20px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h2>前景层调试页面</h2>
+    
+    <div class="debug-info">
+        <p>图片路径: imgs/img_cam_bg2.png</p>
+        <p>图片尺寸: 458x311px</p>
+        <p>前景层高度: 120px</p>
+    </div>
+    
+    <div class="debug-viewfinder">
+        <div class="debug-foreground"></div>
+    </div>
+    
+    <p style="margin: 20px; color: green;">如果看到红色边框内有图片，说明前景层工作正常。</p>
+</body>
+</html>
