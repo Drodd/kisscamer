@@ -2,8 +2,9 @@
 
 // 屏幕适配功能
 function initResponsiveScale() {
-    const gameContainer = document.querySelector('.game-container');
-    const viewportContainer = document.querySelector('.viewport-container');
+    // 获取所有游戏容器，包括标题界面和主游戏
+    const allGameContainers = document.querySelectorAll('.game-container');
+    const allViewportContainers = document.querySelectorAll('.viewport-container');
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     
@@ -11,24 +12,48 @@ function initResponsiveScale() {
     const baseWidth = 720;
     const baseHeight = 1280;
     
-    // 计算缩放比例，保持宽高比
+    // 计算缩放比例，保持宽高比，并确保在所有设备上都能显示完整
     const scaleX = viewportWidth / baseWidth;
     const scaleY = viewportHeight / baseHeight;
-    const scale = Math.min(scaleX, scaleY);
+    let scale = Math.min(scaleX, scaleY);
     
-    // 应用缩放并确保不变形
-    gameContainer.style.transform = `scale(${scale})`;
-    gameContainer.style.transformOrigin = 'center center';
+    // 确保最小缩放比例，避免内容过小
+    const minScale = 0.3;
+    const maxScale = 1.0;
+    scale = Math.max(minScale, Math.min(maxScale, scale));
     
-    // 设置游戏容器的固定尺寸，防止拉伸
-    gameContainer.style.width = baseWidth + 'px';
-    gameContainer.style.height = baseHeight + 'px';
-    gameContainer.style.flexShrink = '0';
+    console.log('响应式缩放信息:', {
+        viewportWidth,
+        viewportHeight,
+        baseWidth,
+        baseHeight,
+        scaleX: scaleX.toFixed(3),
+        scaleY: scaleY.toFixed(3),
+        finalScale: scale.toFixed(3),
+        containerCount: allGameContainers.length
+    });
     
-    // 确保容器使用flex布局保持居中，不变形
-    viewportContainer.style.display = 'flex';
-    viewportContainer.style.alignItems = 'center';
-    viewportContainer.style.justifyContent = 'center';
+    // 对所有游戏容器应用相同的缩放
+    allGameContainers.forEach((gameContainer, index) => {
+        // 应用缩放并确保不变形
+        gameContainer.style.transform = `scale(${scale})`;
+        gameContainer.style.transformOrigin = 'center center';
+        
+        // 设置游戏容器的固定尺寸，防止拉伸
+        gameContainer.style.width = baseWidth + 'px';
+        gameContainer.style.height = baseHeight + 'px';
+        gameContainer.style.flexShrink = '0';
+        
+        console.log(`容器 ${index + 1} 已应用缩放: ${scale.toFixed(3)}`);
+    });
+    
+    // 对所有视口容器设置布局
+    allViewportContainers.forEach((viewportContainer) => {
+        // 确保容器使用flex布局保持居中，不变形
+        viewportContainer.style.display = 'flex';
+        viewportContainer.style.alignItems = 'center';
+        viewportContainer.style.justifyContent = 'center';
+    });
     
     // 窗口大小改变时重新计算
     window.addEventListener('resize', initResponsiveScale);
@@ -51,22 +76,70 @@ class KissCameraGame {
         this.taskPool = [
             {
                 id: 1,
-                name: "拍摄欢呼的观众",
+                name: "双手举起来！",
                 description: "将欢呼的观众放在取景器中央区域",
-                validImages: ['imgs/img_man1.png', 'imgs/img_man2.png', 'imgs/img_man4.png', 'imgs/img_man6.png', 'imgs/img_man8.png', 'imgs/img_man10.png']
+                validImages: ['imgs/img_man4.png', 'imgs/img_man6.png', 'imgs/img_man10.png']
             },
             {
                 id: 2,
-                name: "拍摄心不在焉的观众",
+                name: "忧虑有气质！",
                 description: "将心不在焉的观众放在取景器中央区域",
                 validImages: ['imgs/img_man3.png', 'imgs/img_man5.png', 'imgs/img_man7.png', 'imgs/img_man9.png', 'imgs/img_man11.png']
             },
             {
                 id: 3,
-                name: "拍摄甜蜜情侣",
+                name: "秀秀恩爱！",
                 description: "将甜蜜情侣放在取景器中央区域",
                 validImages: ['imgs/img_cp1.png', 'imgs/img_cp2.png', 'imgs/img_cp3.png'],
                 isCouple: true
+            },
+            {
+                id: 4,
+                name: "上班也要high！",
+                description: "将上班族放在取景器中央区域",
+                validImages: ['imgs/img_man1.png']
+            },
+            {
+                id: 5,
+                name: "对面的女孩看过来！",
+                description: "将女性观众放在取景器中央区域",
+                validImages: ['imgs/img_man2.png','imgs/img_man3.png','imgs/img_man5.png','imgs/img_man6.png','imgs/img_man7.png','imgs/img_man9.png','imgs/img_man11.png']
+            },
+            {
+                id: 6,
+                name: "来点帅哥！",
+                description: "将男性观众放在取景器中央区域",
+                validImages: ['imgs/img_man1.png','imgs/img_man4.png','imgs/img_man8.png','imgs/img_man10.png']
+            },
+            {
+                id: 7,
+                name: "古天乐的皮肤！",
+                description: "将古铜色皮肤的观众放在取景器中央区域",
+                validImages: ['imgs/img_man5.png','imgs/img_man8.png','imgs/img_man11.png']
+            },
+            {
+                id: 8,
+                name: "短发真可爱！",
+                description: "将短发的女性观众放在取景器中央区域",
+                validImages: ['imgs/img_man3.png','imgs/img_man6.png','imgs/img_man7.png','imgs/img_man11.png']
+            },
+            {
+                id: 9,
+                name: "白衣天使在哪里？",
+                description: "将穿白衣服的观众放在取景器中央区域",
+                validImages: ['imgs/img_man2.png','imgs/img_man3.png','imgs/img_man4.png','imgs/img_man8.png']
+            },
+            {
+                id: 10,
+                name: "举起你的左手！",
+                description: "将穿白衣服的观众放在取景器中央区域",
+                validImages: ['imgs/img_man8.png']
+            },
+            {
+                id: 11,
+                name: "举起你的右手！",
+                description: "将穿白衣服的观众放在取景器中央区域",
+                validImages: ['imgs/img_man1.png','imgs/img_man2.png']
             }
         ];
         
@@ -153,24 +226,60 @@ class KissCameraGame {
             'imgs/img_cp3.png'
         ];
 
-        // 生成观众
-        const numAudience = 10;
-        const numCouples = 2; // 添加3对情侣观众
+        // 生成观众 - 确保每种观众至少出现1个
+        const numAudience = 11;
+        const numCouples = 3; // 2对情侣观众
         const allPositions = [];
         
-        // 使用与calculateInitialPosition相同的计算方式确保一致性
-        const viewportWidth = Math.min(window.innerWidth * 0.8, 640);
-        const totalScrollRange = this.maxScroll || viewportWidth * 3;
+        // 使用固定分辨率确保一致性
+        const viewportWidth = 720; // 使用固定的游戏宽度
+        const totalScrollRange = this.maxScroll || viewportWidth * 2.5;
+        
+        // 收集所有可用的观众类型
+        const allAudienceTypes = [...audienceImages];
+        const allCoupleTypes = [...coupleImages];
+        
+        // 创建观众类型列表，确保每种类型至少出现1个（如果观众数量允许）
+        const requiredAudienceTypes = [];
+        const requiredCoupleTypes = [];
+        
+        // 确保普通观众每种至少1个（最多到观众数量限制）
+        const maxUniqueAudience = Math.min(allAudienceTypes.length, numAudience - numCouples);
+        for (let i = 0; i < maxUniqueAudience; i++) {
+            requiredAudienceTypes.push(allAudienceTypes[i]);
+        }
+        
+        // 确保情侣观众每种至少1个（最多到情侣数量限制）
+        const maxUniqueCouples = Math.min(allCoupleTypes.length, numCouples);
+        for (let i = 0; i < maxUniqueCouples; i++) {
+            requiredCoupleTypes.push(allCoupleTypes[i]);
+        }
+        
+        // 填充剩余的观众（当观众数量超过唯一类型数量时允许重复）
+        const remainingAudienceCount = numAudience - numCouples - requiredAudienceTypes.length;
+        const remainingCoupleCount = numCouples - requiredCoupleTypes.length;
+        
+        // 添加剩余的普通观众（允许重复）
+        for (let i = 0; i < remainingAudienceCount; i++) {
+            const randomIndex = Math.floor(Math.random() * allAudienceTypes.length);
+            requiredAudienceTypes.push(allAudienceTypes[randomIndex]);
+        }
+        
+        // 添加剩余的情侣观众（允许重复）
+        for (let i = 0; i < remainingCoupleCount; i++) {
+            const randomIndex = Math.floor(Math.random() * allCoupleTypes.length);
+            requiredCoupleTypes.push(allCoupleTypes[randomIndex]);
+        }
+        
+        // 创建最终的观众列表
+        const finalAudienceTypes = [...requiredAudienceTypes, ...requiredCoupleTypes];
         
         // 在整个横向空间均匀分散分布观众
-        const spacing = totalScrollRange / (numAudience + 1); // 计算均匀间距
-        const margin = 0; // 边缘间距
-        for (let i = 0; i < numAudience; i++) {
-            // 均匀分布的基础上添加随机偏移，覆盖整个横向空间
+        const spacing = totalScrollRange / (finalAudienceTypes.length + 1);
+        for (let i = 0; i < finalAudienceTypes.length; i++) {
             const basePosition = spacing * (i + 1);
-            const randomOffset = (Math.random() - 0.5) * spacing * 0.3; // 轻微随机偏移
+            const randomOffset = (Math.random() - 0.5) * spacing * 0.3;
             const position = basePosition + randomOffset;
-            // 完全覆盖从0到totalScrollRange的整个范围
             allPositions.push(Math.max(100, Math.min(position, totalScrollRange - 200)));
         }
         
@@ -180,24 +289,20 @@ class KissCameraGame {
             [allPositions[i], allPositions[j]] = [allPositions[j], allPositions[i]];
         }
         
-        // 随机选择位置给情侣观众
-        const coupleIndices = [];
-        while (coupleIndices.length < numCouples) {
-            const idx = Math.floor(Math.random() * numAudience);
-            if (!coupleIndices.includes(idx)) {
-                coupleIndices.push(idx);
-            }
+        // 打乱类型顺序，确保随机分布
+        const shuffledTypes = [...finalAudienceTypes];
+        for (let i = shuffledTypes.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledTypes[i], shuffledTypes[j]] = [shuffledTypes[j], shuffledTypes[i]];
         }
         
         // 生成所有观众
-        for (let i = 0; i < numAudience; i++) {
-            const isCouple = coupleIndices.includes(i);
-            const imageSrc = isCouple 
-                ? coupleImages[Math.floor(Math.random() * coupleImages.length)]
-                : audienceImages[Math.floor(Math.random() * audienceImages.length)];
-                
+        for (let i = 0; i < finalAudienceTypes.length; i++) {
+            const imageSrc = shuffledTypes[i];
+            const isCouple = coupleImages.includes(imageSrc);
+            
             const member = this.createAudienceMember(
-                allPositions[i], // 使用打乱后的位置
+                allPositions[i],
                 imageSrc,
                 isCouple
             );
@@ -361,15 +466,11 @@ startMoveLeft() {
             // 移动方向
             const direction = this.isMovingLeft ? -1 : 1;
             
-            // img_cam_bg1和img_cam_bg2的循环宽度，确保无缝衔接
-            const bg1LoopWidth = 901 * 4; // 3604px
-            const bg2LoopWidth = 458 * 8; // 3664px
-            
-            // 使用较大的循环宽度确保无缝循环
-            const maxLoopWidth = Math.max(bg1LoopWidth, bg2LoopWidth);
+            // 取景器和背景的循环宽度，确保无缝衔接
+            const viewfinderLoopWidth = 560 * 4; // 2240px，与CSS中的400%保持一致
             
             // 计算取景器可视区域的实际宽度
-            const viewfinderWidth = this.viewfinder.offsetWidth || 640;
+            const viewfinderWidth = 560; // 使用固定的取景器宽度
             const maxRightDistance = viewfinderWidth * 3; // 最大向右移动距离为可视区域3倍
             
             let newPosition = this.viewfinderPosition + direction * this.moveSpeed;
@@ -395,7 +496,7 @@ startMoveLeft() {
             this.viewfinderContent.style.transform = `translateX(-${newPosition}px)`;
             this.foregroundLayer.style.transform = `translateX(-${newPosition}px)`;
             
-            // 游戏背景相对位移动画：只有img_bg1以1/50速度相对移动（反向移动）
+            // 游戏背景相对位移动画：只有img_bg1以1/50速度相对移动（与取景器方向相反，创造视差效果）
             const backgroundMoveSpeed = 0.02; // 1/50 = 0.02
             const maxBackgroundOffset = 500; // 限制最大偏移量，确保不会露出边缘
             const backgroundOffset = Math.max(-maxBackgroundOffset, Math.min(maxBackgroundOffset, -newPosition * backgroundMoveSpeed));
@@ -504,13 +605,19 @@ startMoveLeft() {
         this.liveContent.innerHTML = '';
         
         // 计算比例系数：直播屏幕宽度 / 取景器宽度
-        const liveScreenWidth = 250; // 直播屏幕实际宽度
-        const viewfinderWidth = this.viewfinder.offsetWidth || 640; // 取景器实际宽度
+        const liveScreenOuterWidth = 350; // CSS中定义的外径
+        const liveScreenWidth = 400; // 使用更大的有效宽度，提供更大的缩放比例 (400/560 ≈ 0.714)
+        const viewfinderWidth = 560; // 取景器实际宽度 (对应CSS中的560px)
         const scaleRatio = liveScreenWidth / viewfinderWidth;
         
-        // 计算偏移量：游戏画面宽度的10%
-        const gameContainerWidth = document.querySelector('.game-container').offsetWidth || 360;
-        const offsetAmount = gameContainerWidth * 0.1;
+        // 调试信息：输出缩放计算结果
+        console.log('直播画面缩放信息:', {
+            liveScreenWidth,
+            viewfinderWidth,
+            scaleRatio: scaleRatio.toFixed(3),
+            viewfinderPosition: this.viewfinderPosition,
+            '新缩放比例': `${liveScreenWidth}/${viewfinderWidth} = ${scaleRatio.toFixed(3)}`
+        });
         
         // 创建直播屏幕的容器结构，使用取景框焦点模式
         const liveContainer = document.createElement('div');
@@ -523,6 +630,7 @@ startMoveLeft() {
             height: 100%;
             overflow: hidden;
             border-radius: 50%;
+            background: #000;
         `;
         
         // 创建背景层，使用取景框当前焦点区域并添加偏移，缩小比例
@@ -532,13 +640,13 @@ startMoveLeft() {
             position: absolute;
             top: 0;
             left: 0;
-            width: ${3604 * scaleRatio}px;
+            width: ${2400 * scaleRatio}px; /* 使用更大宽度确保完全覆盖圆形区域 */
             height: 100%;
             background-image: url('imgs/img_cam_bg1.png');
             background-size: auto 100%;
             background-position: left center;
             background-repeat: repeat-x;
-            transform: translateX(-${(this.viewfinderPosition + offsetAmount) * scaleRatio}px);
+            transform: translateX(-${this.viewfinderPosition * scaleRatio}px);
             transition: none;
             z-index: 1;
         `;
@@ -550,13 +658,13 @@ startMoveLeft() {
             position: absolute;
             bottom: 0;
             left: 0;
-            width: ${3604 * scaleRatio}px;
+            width: ${2400 * scaleRatio}px; /* 使用更大宽度确保完全覆盖圆形区域 */
             height: 40%;
             background-image: url('imgs/img_cam_bg2.png');
             background-size: auto 100%;
             background-position: left bottom;
             background-repeat: repeat-x;
-            transform: translateX(-${(this.viewfinderPosition + offsetAmount) * scaleRatio}px);
+            transform: translateX(-${this.viewfinderPosition * scaleRatio}px);
             z-index: 2;
         `;
         
@@ -576,11 +684,13 @@ startMoveLeft() {
         this.audience.forEach(member => {
             const clonedMember = member.element.cloneNode(true);
             const originalX = parseFloat(member.x);
+            // 直接按比例缩放绝对位置，与背景移动保持一致
             const scaledX = originalX * scaleRatio;
             
             // 设置缩放后的样式
             clonedMember.style.left = scaledX + 'px';
-            clonedMember.style.height = member.element.style.height; // 保持相对高度
+            clonedMember.style.width = `${parseFloat(window.getComputedStyle(member.element).width || '60') * scaleRatio}px`;
+            clonedMember.style.height = `${parseFloat(window.getComputedStyle(member.element).height || '80') * scaleRatio}px`;
             clonedMember.style.aspectRatio = member.element.style.aspectRatio;
             clonedMember.style.backgroundImage = member.element.style.backgroundImage;
             clonedMember.style.backgroundSize = 'contain';
@@ -621,19 +731,16 @@ startMoveLeft() {
             const liveContent = this.liveContent.querySelector('#liveViewfinderContent');
             const liveForeground = this.liveContent.querySelector('#liveForegroundLayer');
             
-            // 计算比例系数和偏移量，确保同步移动
-            const liveScreenWidth = 250;
-            const viewfinderWidth = this.viewfinder.offsetWidth || 640;
+            // 计算比例系数，确保同步移动
+            const liveScreenWidth = 400; // 与cloneViewfinderToLive保持一致
+            const viewfinderWidth = 560; // 与cloneViewfinderToLive保持一致
             const scaleRatio = liveScreenWidth / viewfinderWidth;
             
-            const gameContainerWidth = document.querySelector('.game-container').offsetWidth || 360;
-            const offsetAmount = gameContainerWidth * 0.25;
-            
             if (liveContent) {
-                liveContent.style.transform = `translateX(-${(this.viewfinderPosition + offsetAmount) * scaleRatio}px)`;
+                liveContent.style.transform = `translateX(-${this.viewfinderPosition * scaleRatio}px)`;
             }
             if (liveForeground) {
-                liveForeground.style.transform = `translateX(-${(this.viewfinderPosition + offsetAmount) * scaleRatio}px)`;
+                liveForeground.style.transform = `translateX(-${this.viewfinderPosition * scaleRatio}px)`;
             }
         }
     }
@@ -881,11 +988,93 @@ startMoveLeft() {
         clearInterval(this.taskInterval);
         
         const finalScore = this.score;
-        const message = `游戏结束！\n完成任务次数: ${finalScore}\n\n点击确定重新开始`;
+        const completedTasks = this.score;
+        const avgTime = Math.max(1, 15 - this.score * 0.5); // 简单计算平均用时
         
-        if (confirm(message)) {
-            this.restartGame();
-        }
+        // 获取梯度称号
+        const title = this.getTitleByScore(finalScore);
+        
+        // 隐藏取景器和UI
+        this.hideAllUI();
+        
+        // 滑出取景器
+        const viewfinderContainer = document.querySelector('.viewfinder-container');
+        viewfinderContainer.classList.add('slide-out');
+        
+        // 显示结算界面
+        setTimeout(() => {
+            this.showEndScreen(finalScore, completedTasks, avgTime, title);
+        }, 800);
+    }
+
+    getTitleByScore(score) {
+        const titles = [
+            { min: 0, max: 1, title: "新手摄影师", color: "#ccc" },
+            { min: 2, max: 3, title: "业余摄影师", color: "#66bb6a" },
+            { min: 4, max: 5, title: "熟练摄影师", color: "#42a5f5" },
+            { min: 6, max: 8, title: "专业摄影师", color: "#ab47bc" },
+            { min: 9, max: 12, title: "明星摄影师", color: "#ffa726" },
+            { min: 13, max: 15, title: "传奇摄影师", color: "#ff7043" },
+            { min: 16, max: 20, title: "顶级摄影师", color: "#ef5350" },
+            { min: 21, max: 999, title: "摄影大师", color: "#ffd700" }
+        ];
+        
+        const matched = titles.find(t => score >= t.min && score <= t.max);
+        return matched || titles[0];
+    }
+
+    hideAllUI() {
+        const elementsToHide = [
+            '.score-display',
+            '.task-overlay',
+            '.arrow-left',
+            '.arrow-right',
+            '.push-btn'
+        ];
+        
+        elementsToHide.forEach(selector => {
+            const element = document.querySelector(selector);
+            if (element) {
+                element.classList.add('hidden');
+            }
+        });
+    }
+
+    showEndScreen(score, completedTasks, avgTime, title) {
+        const endScreen = document.getElementById('endScreen');
+        const finalScoreEl = document.getElementById('finalScore');
+        const endTitleEl = document.getElementById('endTitle');
+        const completedTasksEl = document.getElementById('completedTasks');
+        const avgTimeEl = document.getElementById('avgTime');
+        
+        // 设置成绩数据
+        finalScoreEl.textContent = score;
+        endTitleEl.textContent = title.title;
+        endTitleEl.style.color = title.color;
+        completedTasksEl.textContent = completedTasks;
+        avgTimeEl.textContent = avgTime.toFixed(1) + 's';
+        
+        // 显示结算界面
+        endScreen.classList.add('active');
+        
+        // 绑定重新开始按钮
+        document.getElementById('restartBtn').onclick = () => {
+            this.restartGameFromEnd();
+        };
+    }
+
+    restartGameFromEnd() {
+        // 隐藏结算界面
+        const endScreen = document.getElementById('endScreen');
+        endScreen.classList.remove('active');
+        
+        // 重置取景器位置
+        const viewfinderContainer = document.querySelector('.viewfinder-container');
+        viewfinderContainer.classList.remove('slide-out');
+        viewfinderContainer.classList.add('slide-up');
+        
+        // 重新初始化游戏
+        this.restartGame();
     }
 
     restartGame() {
@@ -897,6 +1086,9 @@ startMoveLeft() {
         this.viewfinderPosition = totalScrollRange / 2; // 初始在中间位置
         this.isPushing = false;
         this.currentTask = null;
+        
+        // 确保所有UI元素显示出来
+        this.showGameElements();
         
         this.updateScore();
         this.updateTimer();
@@ -911,17 +1103,110 @@ startMoveLeft() {
         this.generateAudience();
         this.startGame();
     }
+    
+    showGameElements() {
+        const elementsToShow = [
+            '.score-display',
+            '.task-overlay',
+            '.arrow-left',
+            '.arrow-right',
+            '.push-btn'
+        ];
+        
+        elementsToShow.forEach(selector => {
+            const element = document.querySelector(selector);
+            if (element) {
+                element.classList.remove('hidden');
+            }
+        });
+    }
 }
+
+// 游戏状态管理
+let gameInstance = null;
+let isGameStarted = false;
 
 // 初始化游戏
 document.addEventListener('DOMContentLoaded', () => {
-    const game = new KissCameraGame();
+    // 初始化响应式缩放，适用于标题界面
+    initResponsiveScale();
+    
+    // 隐藏游戏元素，显示标题界面
+    hideGameElements();
+    
+    // 绑定开始按钮事件
+    document.getElementById('startBtn').addEventListener('click', startGame);
     
     // 防止页面滚动
     document.addEventListener('touchmove', (e) => {
         e.preventDefault();
     }, { passive: false });
 });
+
+function hideGameElements() {
+    // 隐藏取景器和控制按钮
+    const elementsToHide = [
+        '.viewfinder-container',
+        '.score-display',
+        '.task-overlay',
+        '.arrow-left',
+        '.arrow-right',
+        '.push-btn'
+    ];
+    
+    elementsToHide.forEach(selector => {
+        const element = document.querySelector(selector);
+        if (element) {
+            element.classList.add('hidden');
+        }
+    });
+}
+
+function showGameElements() {
+    // 显示游戏元素
+    const elementsToShow = [
+        '.viewfinder-container',
+        '.score-display',
+        '.task-overlay',
+        '.arrow-left',
+        '.arrow-right',
+        '.push-btn'
+    ];
+    
+    elementsToShow.forEach(selector => {
+        const element = document.querySelector(selector);
+        if (element) {
+            element.classList.remove('hidden');
+        }
+    });
+}
+
+function startGame() {
+    if (isGameStarted) return;
+    
+    isGameStarted = true;
+    
+    // 隐藏标题界面
+    const titleScreen = document.getElementById('titleScreen');
+    titleScreen.style.opacity = '0';
+    
+    // 显示游戏元素
+    showGameElements();
+    
+    // 触发取景器滑入动画
+    const viewfinderContainer = document.querySelector('.viewfinder-container');
+    viewfinderContainer.classList.add('slide-up');
+    
+    // 重新计算缩放，确保游戏界面正确显示
+    initResponsiveScale();
+    
+    // 延迟初始化游戏，等待动画完成
+    setTimeout(() => {
+        titleScreen.style.display = 'none';
+        gameInstance = new KissCameraGame();
+    }, 1000);
+}
+
 
 // 页面可见性变化处理
 document.addEventListener('visibilitychange', () => {
@@ -931,5 +1216,13 @@ document.addEventListener('visibilitychange', () => {
     } else {
         // 页面显示时恢复游戏
         console.log('游戏恢复');
+    }
+});
+
+// 初始化结束界面
+document.addEventListener('DOMContentLoaded', () => {
+    const endScreen = document.getElementById('endScreen');
+    if (endScreen) {
+        endScreen.style.display = 'block'; // 确保结束界面存在但默认隐藏
     }
 });

@@ -22,9 +22,11 @@ body {
     width: 720px;
     height: 1280px;
     background: #111;
-    overflow: hidden;
+    overflow: visible;
     transform-origin: center center;
     flex-shrink: 0;
+    /* 确保容器内容不会被裁剪 */
+    min-height: 1280px;
 }
 
 /* 响应式缩放容器 */
@@ -38,6 +40,7 @@ body {
     align-items: center;
     justify-content: center;
     background: #000;
+    overflow: hidden; /* 防止内容溢出 */
 }
 
 /* 直播屏幕 */
@@ -95,23 +98,22 @@ body {
     position: absolute;
     top: 0;
     left: 0;
-    width: 120%;
-    height: 100%;
+    width: 720px;
+    height: 1280px;
     background-image: url('imgs/img_bg1.png');
-    background-size: 100% 100%;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     z-index: 1;
     transition: transform 0.3s ease;
-    transform: translateX(-10%); /* 初始居中显示 */
 }
 
 .background-near {
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 100%;
-    height: 40%;
+    width: 720px;
+    height: 512px;
     background-image: url('imgs/img_bg2.png');
     background-size: cover;
     background-position: center bottom;
@@ -132,12 +134,13 @@ body {
 }
 
 .viewfinder {
-    width: 600px;
-    height: 480px;
-    left: 10%;
+    width: 560px;
+    height: 420px;
     background: #222;
     overflow: hidden;
-    position: relative;
+    position: absolute;
+    left: 10%;
+    top: 0;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -147,7 +150,7 @@ body {
 
 .viewfinder-overlay {
     position: absolute;
-    bottom: -5%;
+    bottom: -10%;
     left: 50%;
     transform: translateX(-50%);
     width: 120%;
@@ -161,8 +164,9 @@ body {
 }
 
 .viewfinder-content {
-    position: relative;
-    bottom: 15%;
+    position: absolute;
+    left: 0;
+    top: 0;
     width: 400%; /* 扩展为4倍宽度确保无缝循环 */
     height: 100%;
     background-image: url('imgs/img_cam_bg1.png');
@@ -246,11 +250,20 @@ body {
     font-weight: 900;
     color: #fff;
     background: rgba(0, 0, 0, 0.8);
-    padding: 10px 20px;
+    padding: 10px 24px;
     border-radius: 50px;
     min-width: 60px;
     text-align: center;
     letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.star-icon {
+    font-size: 28px;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
 }
 
 /* 任务信息叠加在直播屏幕上方 */
@@ -268,7 +281,7 @@ body {
 }
 
 .task-name {
-    font-size: 36px;
+    font-size: 32px;
     font-weight: 700;
     color: #fff;
     background: rgba(0, 0, 0, 0.9);
@@ -454,8 +467,8 @@ body {
     left: 50%;
     transform: translateX(-50%);
     z-index: 10;
-    width: 200px;
-    height: 200px;
+    width: 350px;
+    height: 350px;
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.9);
     border: 2px solid rgba(255, 255, 255, 0.3);
@@ -466,74 +479,341 @@ body {
     justify-content: center;
 }
 
-/* 移动端适配 */
-@media (max-width: 768px) {
-    .live-screen-container {
-        width: 200px;
-        height: 200px;
-        top: 10px;
+
+/* 标题界面样式 */
+.title-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2000;
+    transition: opacity 0.5s ease-out;
+    background: transparent; /* 移除黑色遮罩，显示游戏背景 */
+}
+
+.title-screen .viewport-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* 与主游戏保持一致 */
+}
+
+.title-screen .game-container {
+    position: relative;
+    width: 720px;
+    height: 1280px;
+    background: #111;
+    overflow: visible;
+    transform-origin: center center;
+    flex-shrink: 0;
+    min-height: 1280px; /* 与主游戏保持一致 */
+}
+
+/* 为标题界面添加游戏背景 */
+.title-screen .game-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('imgs/img_bg1.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 1;
+}
+
+.title-screen .game-container::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40%;
+    background-image: url('imgs/img_bg2.png');
+    background-size: cover;
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    z-index: 2;
+}
+
+.title-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    padding: 60px;
+    background: rgba(0, 0, 0, 0.75);
+    border-radius: 30px;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6);
+    width: 500px;
+    max-width: 90%;
+    z-index: 10; /* 确保在背景上方 */
+}
+
+.game-title {
+    font-size: 64px;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 40px;
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+}
+
+.game-description {
+    font-size: 28px;
+    color: #ddd;
+    margin-bottom: 50px;
+    opacity: 0.95;
+    line-height: 1.5;
+    font-weight: 400;
+}
+
+.start-btn {
+    padding: 25px 60px;
+    font-size: 32px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border: none;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    min-width: 280px;
+}
+
+.start-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.6);
+}
+
+.start-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* 取景器滑入动画 */
+
+.viewfinder-container.slide-up {
+    bottom: 100px; /* 最终位置 */
+    transition: bottom 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* 隐藏的游戏元素 */
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 取景器特殊隐藏样式 */
+.viewfinder-container.hidden {
+    bottom: -500px !important; /* 强制隐藏到屏幕下方 */
+    opacity: 1; /* 保持可见，但位置在屏幕外 */
+}
+
+/* 结算界面样式 */
+.end-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease-out;
+    background: transparent; /* 移除黑色遮罩，显示游戏背景 */
+}
+
+.end-screen.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.end-screen .viewport-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* 为结算界面添加游戏背景 */
+.end-screen .game-container {
+    background: #111;
+}
+
+.end-screen .game-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('imgs/img_bg1.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 1;
+}
+
+.end-screen .game-container::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40%;
+    background-image: url('imgs/img_bg2.png');
+    background-size: cover;
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    z-index: 2;
+}
+
+.end-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    padding: 60px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 30px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.8);
+    width: 600px;
+    max-width: 90%;
+    z-index: 10; /* 确保在背景上方 */
+    animation: endScreenEnter 0.6s ease-out;
+}
+
+@keyframes endScreenEnter {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
     }
-    
-    .viewfinder {
-        aspect-ratio: 4/3;
-        max-height: 60vh;
-    }
-    
-    .game-info {
-        top: 220px;
-        font-size: 12px;
-        gap: 20px;
-        padding: 8px 15px;
-    }
-    
-    .task-info {
-        top: 260px;
-        font-size: 12px;
-        padding: 10px 15px;
-        min-width: 200px;
-    }
-    
-    .task-name {
-        font-size: 14px;
-    }
-    
-    .task-timer {
-        font-size: 16px;
-    }
-    
-    .control-btn {
-        padding: 12px;
-        font-size: 14px;
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
     }
 }
 
-@media (max-width: 480px) {
-    .live-screen-container {
-        width: 150px;
-        height: 150px;
-    }
-    
-    .viewfinder {
-        aspect-ratio: 4/3;
-        max-height: 50vh;
-    }
-    
-    .game-info {
-        top: 170px;
-        flex-direction: column;
-        gap: 5px;
-        align-items: center;
-    }
-    
-    .controls {
-        flex-direction: column;
-        gap: 8px;
-    }
-    
-    .control-btn {
-        padding: 10px;
-        font-size: 12px;
-    }
+.end-title {
+    font-size: 48px;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 40px;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+.end-score-container {
+    margin-bottom: 40px;
+}
+
+.end-score-label {
+    font-size: 24px;
+    color: #ccc;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.end-score {
+    font-size: 72px;
+    font-weight: 900;
+    color: #667eea;
+    margin-bottom: 15px;
+    text-shadow: 0 0 20px rgba(102, 126, 234, 0.8);
+}
+
+.end-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: #ffd700;
+    margin-bottom: 30px;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+}
+
+.end-stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 50px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.stat-label {
+    font-size: 18px;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.restart-btn {
+    padding: 20px 60px;
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border: none;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    min-width: 250px;
+}
+
+.restart-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.7);
+}
+
+.restart-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+/* 取景器滑出动画 */
+.viewfinder-container.slide-out {
+    bottom: -600px !important;
+    transition: bottom 0.8s cubic-bezier(0.55, 0.085, 0.68, 0.53);
 }
 
 /* 动画效果 */
@@ -570,7 +850,7 @@ body {
 /* 前景层 */
 .foreground-layer {
     position: absolute;
-    bottom: 0;
+    top: 0;
     left: 0;
     width: 400%; /* 扩展为原来的4倍确保全覆盖 */
     height: 100%;
