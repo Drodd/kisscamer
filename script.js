@@ -584,9 +584,10 @@ startMoveLeft() {
         // 克隆取景器内容到直播屏幕
         this.cloneViewfinderToLive(reactingCouples);
         
-        // 隐藏待机动画
-        if (liveIdleAnimation) {
-            liveIdleAnimation.hide();
+        // 隐藏待机动画并切换动画类型
+        if (liveAnimationManager) {
+            liveAnimationManager.hide();
+            liveAnimationManager.switchOnPush(); // 推送时切换动画
         }
 
         // 显示直播屏幕
@@ -604,8 +605,8 @@ startMoveLeft() {
             this.isPushing = false;
             
             // 恢复待机动画
-            if (liveIdleAnimation) {
-                liveIdleAnimation.show();
+            if (liveAnimationManager) {
+                liveAnimationManager.show();
             }
             
             // 恢复情侣观众原图
@@ -922,7 +923,7 @@ startMoveLeft() {
         const overlay = document.createElement('div');
         overlay.className = 'task-complete-overlay';
         overlay.innerHTML = `
-            <div class="task-complete-text">任务达成！</div>
+            <div class="task-complete-text">干得漂亮！</div>
         `;
         
         document.body.appendChild(overlay);
@@ -997,7 +998,7 @@ startMoveLeft() {
         const overlay = document.createElement('div');
         overlay.className = 'task-complete-overlay';
         overlay.innerHTML = `
-            <div class="task-complete-text" style="background: rgba(255, 0, 0, 0.9);">任务失败</div>
+            <div class="task-complete-text" style="background: rgba(255, 0, 0, 0.9);">再找找吧</div>
         `;
         
         document.body.appendChild(overlay);
@@ -1266,7 +1267,7 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
-// 直播待机动画类
+// 原始粒子待机动画（粒子扩散）
 class LiveIdleAnimation {
     constructor() {
         this.canvas = document.getElementById('liveCanvas');
@@ -1289,13 +1290,12 @@ class LiveIdleAnimation {
         const canvasHeight = this.canvas.height;
         
         // 在整个canvas范围内创建粒子
-        for (let i = 0; i < 60; i++) {  // 稍微增加数量以填充更大范围
-            // 在整个canvas范围内随机分布
+        for (let i = 0; i < 60; i++) {
             this.particles.push({
                 x: Math.random() * canvasWidth,
                 y: Math.random() * canvasHeight,
-                size: Math.random() * 4 + 2.5,  // 增大尺寸：2.5-6.5px
-                speedX: (Math.random() - 0.5) * 2,  // 稍微增加速度
+                size: Math.random() * 4 + 2.5,
+                speedX: (Math.random() - 0.5) * 2,
                 speedY: (Math.random() - 0.5) * 2,
                 color: this.getOptimizedColor(),
                 alpha: Math.random() * 0.7 + 0.2,
@@ -1306,7 +1306,6 @@ class LiveIdleAnimation {
     }
     
     getOptimizedColor() {
-        // 简化的颜色系统
         const colors = ['#ff0040', '#ff8000', '#ff0000', '#ff4080'];
         return colors[Math.floor(Math.random() * colors.length)];
     }
@@ -1319,11 +1318,9 @@ class LiveIdleAnimation {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.frameCount++;
         
-        // 简化的律动效果 - 每30帧一个循环
         const pulse = Math.sin(this.frameCount * 0.21);
         const beatIntensity = Math.abs(pulse);
         
-        // 扩大背景渐变范围
         const gradient = this.ctx.createRadialGradient(
             this.canvas.width / 2, this.canvas.height / 2, 0,
             this.canvas.width / 2, this.canvas.height / 2, 140
@@ -1333,13 +1330,10 @@ class LiveIdleAnimation {
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // 简化的粒子更新和绘制
         this.particles.forEach(particle => {
-            // 简化移动逻辑
             particle.x += particle.speedX;
             particle.y += particle.speedY;
             
-            // 简化的边界检测 - 扩大到整个canvas范围
             if (particle.x < 0 || particle.x > this.canvas.width) {
                 particle.speedX *= -0.8;
                 particle.x = Math.max(0, Math.min(this.canvas.width, particle.x));
@@ -1349,9 +1343,8 @@ class LiveIdleAnimation {
                 particle.y = Math.max(0, Math.min(this.canvas.height, particle.y));
             }
             
-            // 简化的绘制逻辑 - 增大尺寸变化
             const currentAlpha = particle.alpha * (0.5 + pulse * 0.3);
-            const currentSize = particle.size * (1 + pulse * 0.5);  // 增大脉冲效果
+            const currentSize = particle.size * (1 + pulse * 0.5);
             
             this.ctx.globalAlpha = Math.max(0, Math.min(1, currentAlpha));
             this.ctx.fillStyle = particle.color;
@@ -1360,7 +1353,6 @@ class LiveIdleAnimation {
             this.ctx.fill();
         });
         
-        // 中心光效 - 居中显示，增大尺寸
         if (beatIntensity > 0.5) {
             this.ctx.globalAlpha = beatIntensity * 0.3;
             this.ctx.fillStyle = '#ff0040';
@@ -1371,7 +1363,6 @@ class LiveIdleAnimation {
         
         this.ctx.globalAlpha = 1;
         
-        // 简化文字同步
         if (typeof document !== 'undefined') {
             const liveText = document.querySelector('.live-text');
             if (liveText) {
@@ -1391,6 +1382,7 @@ class LiveIdleAnimation {
     }
     
     show() {
+        this.frameCount = 0;
         const idleElement = document.getElementById('liveIdleAnimation');
         if (idleElement) {
             idleElement.classList.remove('hidden');
@@ -1407,16 +1399,232 @@ class LiveIdleAnimation {
     }
 }
 
-// 全局直播待机动画实例
-let liveIdleAnimation = null;
+// 圆环扩散待机动画（新增）
+class LiveRingAnimation {
+    constructor() {
+        this.canvas = document.getElementById('liveCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.animationId = null;
+        this.frameCount = 0;
+        this.rings = [];
+        this.colors = ['#ff0040', '#ff8000', '#ff0000', '#ff4080', '#ff00ff', '#ffff00', '#00ffff'];
+        
+        this.init();
+    }
+    
+    init() {
+        this.startAnimation();
+    }
+    
+    startAnimation() {
+        this.animate();
+    }
+    
+    createRing() {
+        return {
+            radius: 0,
+            maxRadius: 125, // 匹配250px圆形屏幕
+            thickness: 3 + Math.random() * 4,
+            color: this.colors[Math.floor(Math.random() * this.colors.length)],
+            alpha: 1,
+            speed: 3 + Math.random() * 3,
+            glowIntensity: 0.8 + Math.random() * 0.4
+        };
+    }
+    
+    animate() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.frameCount++;
+        
+        const centerX = this.canvas.width / 2;
+        const centerY = this.canvas.height / 2;
+        
+        // 每30帧创建新圆环，降低频率增加节奏感
+        if (this.frameCount % 30 === 0) {
+            this.rings.push(this.createRing());
+        }
+        
+        // 添加音乐节拍效果
+        const beat = Math.sin(this.frameCount * 0.08);
+        const beatIntensity = Math.abs(beat);
+        
+        // 更新和绘制圆环
+        this.rings = this.rings.filter(ring => {
+            ring.radius += ring.speed * (0.5 + beatIntensity * 0.5); // 速度随节拍变化
+            ring.alpha = 1 - (ring.radius / ring.maxRadius);
+            
+            if (ring.alpha > 0) {
+                // 绘制发光圆环 - 随节拍变化
+                this.ctx.globalAlpha = ring.alpha * (0.2 + beatIntensity * 0.3);
+                this.ctx.shadowColor = ring.color;
+                this.ctx.shadowBlur = ring.glowIntensity * (15 + beatIntensity * 10);
+                this.ctx.strokeStyle = ring.color;
+                this.ctx.lineWidth = ring.thickness * (1 + beatIntensity * 0.5);
+                this.ctx.beginPath();
+                this.ctx.arc(centerX, centerY, ring.radius, 0, Math.PI * 2);
+                this.ctx.stroke();
+                
+                // 绘制内部亮环 - 随节拍变化
+                this.ctx.globalAlpha = ring.alpha * (0.6 + beatIntensity * 0.4);
+                this.ctx.shadowBlur = 5 + beatIntensity * 5;
+                this.ctx.lineWidth = ring.thickness * (0.8 + beatIntensity * 0.3);
+                this.ctx.beginPath();
+                this.ctx.arc(centerX, centerY, ring.radius, 0, Math.PI * 2);
+                this.ctx.stroke();
+                
+                this.ctx.shadowBlur = 0;
+                return true;
+            }
+            return false;
+        });
+        
+        // 添加中心脉冲光效 - 更强的节拍感
+        const pulse = Math.sin(this.frameCount * 0.08);
+        const centerGlow = Math.abs(pulse);
+        if (centerGlow > 0.2) {
+            this.ctx.globalAlpha = centerGlow * 0.6;
+            this.ctx.fillStyle = '#ff0040';
+            this.ctx.beginPath();
+            this.ctx.arc(centerX, centerY, 5 + centerGlow * 20, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+        
+        this.ctx.globalAlpha = 1;
+        
+        // 同步文字动画 - 更强的节拍感
+        if (typeof document !== 'undefined') {
+            const liveText = document.querySelector('.live-text');
+            if (liveText) {
+                const scale = 1 + Math.sin(this.frameCount * 0.08) * 0.2;
+                liveText.style.setProperty('--scale', scale);
+            }
+        }
+        
+        this.animationId = requestAnimationFrame(() => this.animate());
+    }
+    
+    stop() {
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
+    }
+    
+    show() {
+        this.frameCount = 0;
+        const idleElement = document.getElementById('liveIdleAnimation');
+        if (idleElement) {
+            idleElement.classList.remove('hidden');
+        }
+        this.startAnimation();
+    }
+    
+    hide() {
+        const idleElement = document.getElementById('liveIdleAnimation');
+        if (idleElement) {
+            idleElement.classList.add('hidden');
+        }
+        this.stop();
+    }
+}
 
-// 初始化结束界面
+// 全局直播待机动画实例和切换系统
+let currentAnimation = null;
+let animationType = 'particles'; // 'particles' 或 'rings'
+let animationSwitchInterval = null;
+
+// 动画切换管理器
+class AnimationManager {
+    constructor() {
+        this.particleAnimation = null;
+        this.ringAnimation = null;
+        this.currentAnimation = null;
+        this.animationType = 'rings'; // 默认使用圆环动画
+        this.switchInterval = null;
+        
+        this.init();
+    }
+    
+    init() {
+        this.particleAnimation = new LiveIdleAnimation();
+        this.ringAnimation = new LiveRingAnimation();
+        
+        // 默认显示圆环动画
+        this.showAnimation('rings');
+        
+        // 每15秒切换一次动画
+        this.startAutoSwitch();
+    }
+    
+    showAnimation(type) {
+        // 隐藏当前动画
+        if (this.currentAnimation) {
+            this.currentAnimation.hide();
+        }
+        
+        // 显示新动画
+        if (type === 'particles') {
+            this.currentAnimation = this.particleAnimation;
+        } else {
+            this.currentAnimation = this.ringAnimation;
+        }
+        
+        this.currentAnimation.show();
+        this.animationType = type;
+    }
+    
+    switchAnimation() {
+        const newType = this.animationType === 'particles' ? 'rings' : 'particles';
+        this.showAnimation(newType);
+    }
+    
+    startAutoSwitch() {
+        // 移除自动切换机制，改为手动切换
+        // this.switchInterval = setInterval(() => {
+        //     this.switchAnimation();
+        // }, 15000); // 每15秒切换一次
+    }
+    
+    stopAutoSwitch() {
+        if (this.switchInterval) {
+            clearInterval(this.switchInterval);
+            this.switchInterval = null;
+        }
+    }
+    
+    switchOnPush() {
+        // 每次推送时切换动画
+        this.switchAnimation();
+    }
+    
+    show() {
+        if (this.currentAnimation) {
+            this.currentAnimation.show();
+        }
+    }
+    
+    hide() {
+        if (this.currentAnimation) {
+            this.currentAnimation.hide();
+        }
+        this.stopAutoSwitch();
+    }
+    
+    getCurrentType() {
+        return this.animationType;
+    }
+}
+
+// 全局动画管理器
+let liveAnimationManager = null;
+
+// 初始化结束界面和动画系统
 document.addEventListener('DOMContentLoaded', () => {
     const endScreen = document.getElementById('endScreen');
     if (endScreen) {
-        endScreen.style.display = 'block'; // 确保结束界面存在但默认隐藏
+        endScreen.style.display = 'block';
     }
     
-    // 初始化直播待机动画
-    liveIdleAnimation = new LiveIdleAnimation();
+    // 初始化动画管理器
+    liveAnimationManager = new AnimationManager();
 });
