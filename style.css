@@ -98,7 +98,7 @@ body {
     position: absolute;
     top: 0;
     left: 0;
-    width: 720px;
+    width: 760px;
     height: 1280px;
     background-image: url('imgs/img_bg1.png');
     background-size: cover;
@@ -838,13 +838,33 @@ body {
 
 .audience-member.reacting {
     animation: coupleReact 0.3s ease-in-out;
-    transform: scale(1.1);
+    transform: translateY(-5px);
 }
 
 @keyframes coupleReact {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.15); }
-    100% { transform: scale(1.1); }
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+    100% { transform: translateY(-5px); }
+}
+
+/* 观众演唱会跃动动画 */
+@keyframes idleJump {
+    0%, 100% { 
+        transform: translateY(0);
+    }
+    25% {
+        transform: translateY(6px);
+    }
+    50% { 
+        transform: translateY(12px);
+    }
+    75% {
+        transform: translateY(4px);
+    }
+}
+
+.audience-member {
+    animation: idleJump 1.8s ease-in-out infinite;
 }
 
 /* 前景层 */

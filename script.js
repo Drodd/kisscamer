@@ -201,7 +201,7 @@ class KissCameraGame {
         this.audience = [];
 
         // 确保前景层可见
-        this.foregroundLayer.style.backgroundImage = "url('imgs/img_cam_bg2.png')";
+        this.foregroundLayer.style.backgroundImage = "url('./imgs/img_cam_bg2.png')";
         this.foregroundLayer.style.display = 'block';
 
         // 普通观众图片列表
@@ -326,6 +326,9 @@ class KissCameraGame {
             element.dataset.originalSrc = imageSrc;
             element.dataset.reactSrc = baseName + '_react.png';
         }
+        
+        // 添加待机循环动画
+        this.addIdleAnimation(element);
 
         return {
             element: element,
@@ -334,6 +337,14 @@ class KissCameraGame {
             isCouple: isCouple,
             isReacting: false
         };
+    }
+    
+    addIdleAnimation(element) {
+        // 为观众添加上下跃动动画，模拟演唱会节奏
+        const animationDelay = Math.random() * 1.5; // 0-1.5秒随机延迟
+        const animationDuration = 1.5 + Math.random() * 0.5; // 1.5-2秒随机时长
+        
+        element.style.animation = `idleJump ${animationDuration}s ease-in-out ${animationDelay}s infinite`;
     }
 
 
@@ -616,7 +627,9 @@ startMoveLeft() {
             viewfinderWidth,
             scaleRatio: scaleRatio.toFixed(3),
             viewfinderPosition: this.viewfinderPosition,
-            '新缩放比例': `${liveScreenWidth}/${viewfinderWidth} = ${scaleRatio.toFixed(3)}`
+            '新缩放比例': `${liveScreenWidth}/${viewfinderWidth} = ${scaleRatio.toFixed(3)}`,
+            '前景层宽度': `${2400 * scaleRatio}px`,
+            '前景层偏移': `${this.viewfinderPosition * scaleRatio}px`
         });
         
         // 创建直播屏幕的容器结构，使用取景框焦点模式
@@ -654,37 +667,42 @@ startMoveLeft() {
         // 创建前景层，使用取景框当前焦点区域并添加偏移，缩小比例
         const liveForegroundLayer = document.createElement('div');
         liveForegroundLayer.id = 'liveForegroundLayer';
+        liveForegroundLayer.className = 'foreground-layer'; // 使用CSS类获得正确的层级
         liveForegroundLayer.style.cssText = `
             position: absolute;
             bottom: 0;
             left: 0;
             width: ${2400 * scaleRatio}px; /* 使用更大宽度确保完全覆盖圆形区域 */
-            height: 40%;
-            background-image: url('imgs/img_cam_bg2.png');
+            height: 100%; /* 与CSS保持一致，通过background-position控制显示位置 */
+            background-image: url('./imgs/img_cam_bg2.png');
             background-size: auto 100%;
             background-position: left bottom;
             background-repeat: repeat-x;
             transform: translateX(-${this.viewfinderPosition * scaleRatio}px);
-            z-index: 2;
+            z-index: 10 !important; /* 强制确保前景层在所有观众上方 */
+            pointer-events: none;
         `;
         
         // 创建观众层，显示取景框当前焦点区域
         const liveAudienceLayer = document.createElement('div');
         liveAudienceLayer.id = 'liveAudienceLayer';
+        liveAudienceLayer.className = 'audience-layer'; // 使用CSS类获得正确的层级
         liveAudienceLayer.style.cssText = `
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
+            width: ${2400 * scaleRatio}px; /* 与背景层同宽 */
             height: 100%;
             pointer-events: none;
+            transform: translateX(-${this.viewfinderPosition * scaleRatio}px);
+            z-index: 2; /* 在背景层上方，但在前景层下方 */
         `;
         
         // 克隆所有观众成员，按比例缩小位置
         this.audience.forEach(member => {
             const clonedMember = member.element.cloneNode(true);
             const originalX = parseFloat(member.x);
-            // 直接按比例缩放绝对位置，与背景移动保持一致
+            // 由于观众层有自己的transform，直接使用缩放后的位置
             const scaledX = originalX * scaleRatio;
             
             // 设置缩放后的样式
@@ -698,6 +716,8 @@ startMoveLeft() {
             clonedMember.style.backgroundPosition = 'bottom center';
             clonedMember.style.bottom = member.element.style.bottom;
             clonedMember.style.transformOrigin = 'bottom center';
+            clonedMember.style.position = 'absolute';
+            clonedMember.style.zIndex = '1'; /* 确保观众在观众层内，但不会覆盖前景层 */
             
             // 确保data属性被正确复制
             clonedMember.dataset.imageSrc = member.imageSrc;
@@ -719,9 +739,20 @@ startMoveLeft() {
         });
         
         // 组装结构 - 现在直播屏幕将按比例显示取景框当前焦点区域
-        liveViewfinderContent.appendChild(liveAudienceLayer);
-        liveViewfinderContent.appendChild(liveForegroundLayer);
-        liveContainer.appendChild(liveViewfinderContent);
+        // 按正确顺序添加：背景层、观众层、前景层
+        liveContainer.appendChild(liveViewfinderContent); // 背景层
+        liveContainer.appendChild(liveAudienceLayer); // 观众层
+        liveContainer.appendChild(liveForegroundLayer); // 前景层（最上层）
+        
+        // 调试信息：检查层级设置
+        console.log('直播屏幕层级调试:', {
+            '背景层z-index': window.getComputedStyle(liveViewfinderContent).zIndex,
+            '观众层z-index': window.getComputedStyle(liveAudienceLayer).zIndex,
+            '前景层z-index': window.getComputedStyle(liveForegroundLayer).zIndex,
+            '前景层className': liveForegroundLayer.className,
+            '观众层className': liveAudienceLayer.className
+        });
+        
         this.liveContent.appendChild(liveContainer);
     }
 
@@ -729,6 +760,7 @@ startMoveLeft() {
         // 如果直播屏幕正在显示，同步移动
         if (this.liveContent.classList.contains('active')) {
             const liveContent = this.liveContent.querySelector('#liveViewfinderContent');
+            const liveAudience = this.liveContent.querySelector('#liveAudienceLayer');
             const liveForeground = this.liveContent.querySelector('#liveForegroundLayer');
             
             // 计算比例系数，确保同步移动
@@ -736,11 +768,16 @@ startMoveLeft() {
             const viewfinderWidth = 560; // 与cloneViewfinderToLive保持一致
             const scaleRatio = liveScreenWidth / viewfinderWidth;
             
+            const transformValue = `translateX(-${this.viewfinderPosition * scaleRatio}px)`;
+            
             if (liveContent) {
-                liveContent.style.transform = `translateX(-${this.viewfinderPosition * scaleRatio}px)`;
+                liveContent.style.transform = transformValue;
+            }
+            if (liveAudience) {
+                liveAudience.style.transform = transformValue;
             }
             if (liveForeground) {
-                liveForeground.style.transform = `translateX(-${this.viewfinderPosition * scaleRatio}px)`;
+                liveForeground.style.transform = transformValue;
             }
         }
     }
