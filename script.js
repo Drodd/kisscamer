@@ -418,24 +418,240 @@ class KissCameraGame {
 
     setupTouchControls() {
         let touchStartX = 0;
-        let touchEndX = 0;
+        let touchCurrentX = 0;
+        let touchStartTime = 0;
+        let isTouching = false;
+        let initialViewfinderPosition = 0;
+        let lastTouchTime = 0;
+        let touchVelocity = 0;
+        let inertiaAnimationId = null;
 
+        // 阻止默认的触摸行为
         this.viewfinder.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-        });
-
-        this.viewfinder.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
-            const diff = touchStartX - touchEndX;
+            e.preventDefault();
             
-            if (Math.abs(diff) > 50) {
-                if (diff > 0) {
-                    this.moveViewfinder(100);
-                } else {
-                    this.moveViewfinder(-100);
+            // 停止惯性滚动
+            if (inertiaAnimationId) {
+                cancelAnimationFrame(inertiaAnimationId);
+                inertiaAnimationId = null;
+            }
+            
+            // 停止连续移动
+            this.stopContinuousMove();
+            
+            isTouching = true;
+            touchStartX = e.touches[0].clientX;
+            touchCurrentX = touchStartX;
+            touchStartTime = Date.now();
+            lastTouchTime = touchStartTime;
+            initialViewfinderPosition = this.viewfinderPosition;
+            touchVelocity = 0;
+            
+            // 触觉反馈 (如果设备支持)
+            if (navigator.vibrate) {
+                navigator.vibrate(10); // 短暂振动10ms
+            }
+            
+            console.log('触摸开始:', { touchStartX, initialViewfinderPosition });
+        }, { passive: false });
+
+        this.viewfinder.addEventListener('touchmove', (e) => {
+            if (!isTouching) return;
+            e.preventDefault();
+            
+            touchCurrentX = e.touches[0].clientX;
+            const touchDelta = touchStartX - touchCurrentX;
+            const currentTime = Date.now();
+            const timeDelta = currentTime - lastTouchTime;
+            
+            // 计算速度 (像素/毫秒)
+            if (timeDelta > 0) {
+                const positionDelta = touchCurrentX - (touchStartX - (this.viewfinderPosition - initialViewfinderPosition));
+                touchVelocity = positionDelta / timeDelta;
+            }
+            
+            // 计算新的取景器位置
+            let newPosition = initialViewfinderPosition + touchDelta;
+            
+            // 应用边界限制和弹性阻力
+            const maxRightDistance = 560 * 3; // 与原有逻辑保持一致
+            const elasticZone = 50; // 边界弹性区域
+            
+            // 左边界弹性处理
+            if (newPosition < 0) {
+                const overDistance = Math.abs(newPosition);
+                newPosition = -overDistance * 0.3; // 30% 的阻力
+                if (newPosition < -elasticZone) {
+                    newPosition = -elasticZone;
                 }
             }
+            // 右边界弹性处理
+            else if (newPosition > maxRightDistance) {
+                const overDistance = newPosition - maxRightDistance;
+                newPosition = maxRightDistance + overDistance * 0.3; // 30% 的阻力
+                if (newPosition > maxRightDistance + elasticZone) {
+                    newPosition = maxRightDistance + elasticZone;
+                }
+            }
+            
+            // 更新取景器位置
+            this.updateViewfinderPosition(newPosition);
+            
+            lastTouchTime = currentTime;
+            
+            console.log('触摸移动:', { 
+                touchDelta: touchDelta.toFixed(1), 
+                newPosition: newPosition.toFixed(1),
+                velocity: touchVelocity.toFixed(3)
+            });
+        }, { passive: false });
+
+        this.viewfinder.addEventListener('touchend', (e) => {
+            if (!isTouching) return;
+            e.preventDefault();
+            
+            isTouching = false;
+            const touchEndTime = Date.now();
+            const totalTime = touchEndTime - touchStartTime;
+            const totalDistance = touchCurrentX - touchStartX;
+            
+            console.log('触摸结束:', { 
+                totalDistance: totalDistance.toFixed(1), 
+                totalTime,
+                velocity: touchVelocity.toFixed(3)
+            });
+            
+            // 检查是否需要边界回弹
+            const maxRightDistance = 560 * 3;
+            const needsBounceBack = this.viewfinderPosition < 0 || this.viewfinderPosition > maxRightDistance;
+            
+            if (needsBounceBack) {
+                // 边界回弹动画
+                this.startBounceBack();
+            } else if (Math.abs(touchVelocity) > 0.1 && totalTime < 300) {
+                // 如果有足够的速度，启动惯性滚动
+                this.startInertiaScroll(touchVelocity);
+            }
+        }, { passive: false });
+
+        this.viewfinder.addEventListener('touchcancel', (e) => {
+            isTouching = false;
+            if (inertiaAnimationId) {
+                cancelAnimationFrame(inertiaAnimationId);
+                inertiaAnimationId = null;
+            }
         });
+
+        // 惯性滚动方法
+        this.startInertiaScroll = (initialVelocity) => {
+            let velocity = initialVelocity * -200; // 转换为合适的像素/秒
+            const friction = 0.95; // 摩擦系数
+            const minVelocity = 1; // 最小速度阈值
+            
+            const inertiaStep = () => {
+                if (Math.abs(velocity) < minVelocity) {
+                    inertiaAnimationId = null;
+                    return;
+                }
+                
+                // 计算新位置
+                let newPosition = this.viewfinderPosition + velocity / 60; // 假设60fps
+                
+                // 边界检查和回弹
+                const maxRightDistance = 560 * 3;
+                if (newPosition < 0) {
+                    newPosition = 0;
+                    velocity = 0; // 撞到边界停止
+                    // 边界触觉反馈
+                    if (navigator.vibrate) {
+                        navigator.vibrate(30);
+                    }
+                } else if (newPosition > maxRightDistance) {
+                    newPosition = maxRightDistance;
+                    velocity = 0; // 撞到边界停止
+                    // 边界触觉反馈
+                    if (navigator.vibrate) {
+                        navigator.vibrate(30);
+                    }
+                }
+                
+                // 更新位置
+                this.updateViewfinderPosition(newPosition);
+                
+                // 应用摩擦
+                velocity *= friction;
+                
+                // 继续动画
+                inertiaAnimationId = requestAnimationFrame(inertiaStep);
+            };
+            
+            inertiaAnimationId = requestAnimationFrame(inertiaStep);
+        };
+        
+        // 边界回弹方法
+        this.startBounceBack = () => {
+            const currentPosition = this.viewfinderPosition;
+            const maxRightDistance = 560 * 3;
+            let targetPosition;
+            
+            // 确定目标位置
+            if (currentPosition < 0) {
+                targetPosition = 0;
+            } else if (currentPosition > maxRightDistance) {
+                targetPosition = maxRightDistance;
+            } else {
+                return; // 不需要回弹
+            }
+            
+            const distance = targetPosition - currentPosition;
+            const duration = 300; // 回弹动画持续时间
+            const startTime = Date.now();
+            
+            const bounceStep = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // 使用缓出效果 (easeOut)
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                
+                const newPosition = currentPosition + distance * easeOut;
+                this.updateViewfinderPosition(newPosition);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(bounceStep);
+                }
+            };
+            
+            requestAnimationFrame(bounceStep);
+        };
+    }
+    
+    // 新增：统一的取景器位置更新方法
+    updateViewfinderPosition(newPosition) {
+        this.viewfinderPosition = newPosition;
+        this.viewfinderContent.style.transform = `translateX(-${newPosition}px)`;
+        this.foregroundLayer.style.transform = `translateX(-${newPosition}px)`;
+        
+        // 背景视差效果（只在正常范围内应用，避免边界弹性时的异常）
+        const maxRightDistance = 560 * 3;
+        const clampedPosition = Math.max(0, Math.min(maxRightDistance, newPosition));
+        const backgroundMoveSpeed = 0.02;
+        const maxBackgroundOffset = 500;
+        const backgroundOffset = Math.max(-maxBackgroundOffset, Math.min(maxBackgroundOffset, -clampedPosition * backgroundMoveSpeed));
+        if (this.backgroundFar) {
+            this.backgroundFar.style.transform = `translateX(${backgroundOffset}px)`;
+        }
+        
+        // 高亮可见目标（使用限制后的位置）
+        const originalPosition = this.viewfinderPosition;
+        this.viewfinderPosition = clampedPosition;
+        this.highlightVisibleTargets();
+        this.viewfinderPosition = originalPosition;
+        
+        // 同步直播屏幕显示（使用限制后的位置）
+        this.viewfinderPosition = clampedPosition;
+        this.syncLiveDisplay();
+        this.viewfinderPosition = originalPosition;
     }
 
 startMoveLeft() {
@@ -503,23 +719,8 @@ startMoveLeft() {
                     this.isMovingLeft = false;
                 }
             }
-            this.viewfinderPosition = newPosition;
-            this.viewfinderContent.style.transform = `translateX(-${newPosition}px)`;
-            this.foregroundLayer.style.transform = `translateX(-${newPosition}px)`;
-            
-            // 游戏背景相对位移动画：只有img_bg1以1/50速度相对移动（与取景器方向相反，创造视差效果）
-            const backgroundMoveSpeed = 0.02; // 1/50 = 0.02
-            const maxBackgroundOffset = 500; // 限制最大偏移量，确保不会露出边缘
-            const backgroundOffset = Math.max(-maxBackgroundOffset, Math.min(maxBackgroundOffset, -newPosition * backgroundMoveSpeed));
-            if (this.backgroundFar) {
-                this.backgroundFar.style.transform = `translateX(${backgroundOffset}px)`;
-            }
-            // img_bg2保持不动，不设置transform
-            
-            this.highlightVisibleTargets();
-            
-            // 同步直播屏幕的显示（如果正在显示）
-            this.syncLiveDisplay();
+            // 使用统一的位置更新方法
+            this.updateViewfinderPosition(newPosition);
             
             if (this.isMovingLeft || this.isMovingRight) {
                 this.animationFrame = requestAnimationFrame(moveStep);
