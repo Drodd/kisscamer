@@ -584,6 +584,11 @@ startMoveLeft() {
         // 克隆取景器内容到直播屏幕
         this.cloneViewfinderToLive(reactingCouples);
         
+        // 隐藏待机动画
+        if (liveIdleAnimation) {
+            liveIdleAnimation.hide();
+        }
+
         // 显示直播屏幕
         this.liveContent.classList.add('active');
 
@@ -597,6 +602,11 @@ startMoveLeft() {
             this.viewfinder.classList.remove('recording');
             this.pushBtn.disabled = false;
             this.isPushing = false;
+            
+            // 恢复待机动画
+            if (liveIdleAnimation) {
+                liveIdleAnimation.show();
+            }
             
             // 恢复情侣观众原图
             this.restoreCoupleImages(reactingCouples);
@@ -1256,10 +1266,157 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
+// 直播待机动画类
+class LiveIdleAnimation {
+    constructor() {
+        this.canvas = document.getElementById('liveCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.animationId = null;
+        this.particles = [];
+        this.frameCount = 0;
+        
+        this.init();
+    }
+    
+    init() {
+        this.createParticles();
+        this.startAnimation();
+    }
+    
+    createParticles() {
+        // 扩大粒子范围至整个250x250直播屏幕
+        const canvasWidth = this.canvas.width;
+        const canvasHeight = this.canvas.height;
+        
+        // 在整个canvas范围内创建粒子
+        for (let i = 0; i < 60; i++) {  // 稍微增加数量以填充更大范围
+            // 在整个canvas范围内随机分布
+            this.particles.push({
+                x: Math.random() * canvasWidth,
+                y: Math.random() * canvasHeight,
+                size: Math.random() * 4 + 2.5,  // 增大尺寸：2.5-6.5px
+                speedX: (Math.random() - 0.5) * 2,  // 稍微增加速度
+                speedY: (Math.random() - 0.5) * 2,
+                color: this.getOptimizedColor(),
+                alpha: Math.random() * 0.7 + 0.2,
+                pulseSpeed: 0.1,
+                pulsePhase: Math.random() * Math.PI * 2
+            });
+        }
+    }
+    
+    getOptimizedColor() {
+        // 简化的颜色系统
+        const colors = ['#ff0040', '#ff8000', '#ff0000', '#ff4080'];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+    
+    startAnimation() {
+        this.animate();
+    }
+    
+    animate() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.frameCount++;
+        
+        // 简化的律动效果 - 每30帧一个循环
+        const pulse = Math.sin(this.frameCount * 0.21);
+        const beatIntensity = Math.abs(pulse);
+        
+        // 扩大背景渐变范围
+        const gradient = this.ctx.createRadialGradient(
+            this.canvas.width / 2, this.canvas.height / 2, 0,
+            this.canvas.width / 2, this.canvas.height / 2, 140
+        );
+        gradient.addColorStop(0, `rgba(255, 0, 64, ${0.1 + beatIntensity * 0.1})`);
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        this.ctx.fillStyle = gradient;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // 简化的粒子更新和绘制
+        this.particles.forEach(particle => {
+            // 简化移动逻辑
+            particle.x += particle.speedX;
+            particle.y += particle.speedY;
+            
+            // 简化的边界检测 - 扩大到整个canvas范围
+            if (particle.x < 0 || particle.x > this.canvas.width) {
+                particle.speedX *= -0.8;
+                particle.x = Math.max(0, Math.min(this.canvas.width, particle.x));
+            }
+            if (particle.y < 0 || particle.y > this.canvas.height) {
+                particle.speedY *= -0.8;
+                particle.y = Math.max(0, Math.min(this.canvas.height, particle.y));
+            }
+            
+            // 简化的绘制逻辑 - 增大尺寸变化
+            const currentAlpha = particle.alpha * (0.5 + pulse * 0.3);
+            const currentSize = particle.size * (1 + pulse * 0.5);  // 增大脉冲效果
+            
+            this.ctx.globalAlpha = Math.max(0, Math.min(1, currentAlpha));
+            this.ctx.fillStyle = particle.color;
+            this.ctx.beginPath();
+            this.ctx.arc(particle.x, particle.y, currentSize, 0, Math.PI * 2);
+            this.ctx.fill();
+        });
+        
+        // 中心光效 - 居中显示，增大尺寸
+        if (beatIntensity > 0.5) {
+            this.ctx.globalAlpha = beatIntensity * 0.3;
+            this.ctx.fillStyle = '#ff0040';
+            this.ctx.beginPath();
+            this.ctx.arc(this.canvas.width / 2, this.canvas.height / 2, 12 + beatIntensity * 16, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+        
+        this.ctx.globalAlpha = 1;
+        
+        // 简化文字同步
+        if (typeof document !== 'undefined') {
+            const liveText = document.querySelector('.live-text');
+            if (liveText) {
+                const scale = 1 + pulse * 0.15;
+                liveText.style.setProperty('--scale', scale);
+            }
+        }
+        
+        this.animationId = requestAnimationFrame(() => this.animate());
+    }
+    
+    stop() {
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
+    }
+    
+    show() {
+        const idleElement = document.getElementById('liveIdleAnimation');
+        if (idleElement) {
+            idleElement.classList.remove('hidden');
+        }
+        this.startAnimation();
+    }
+    
+    hide() {
+        const idleElement = document.getElementById('liveIdleAnimation');
+        if (idleElement) {
+            idleElement.classList.add('hidden');
+        }
+        this.stop();
+    }
+}
+
+// 全局直播待机动画实例
+let liveIdleAnimation = null;
+
 // 初始化结束界面
 document.addEventListener('DOMContentLoaded', () => {
     const endScreen = document.getElementById('endScreen');
     if (endScreen) {
         endScreen.style.display = 'block'; // 确保结束界面存在但默认隐藏
     }
+    
+    // 初始化直播待机动画
+    liveIdleAnimation = new LiveIdleAnimation();
 });

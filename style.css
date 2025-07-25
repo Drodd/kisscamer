@@ -83,6 +83,63 @@ body {
     opacity: 1;
 }
 
+/* 直播待机动画 */
+.live-idle-animation {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
+}
+
+.live-idle-animation.hidden {
+    display: none;
+}
+
+#liveCanvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.live-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 82px;
+    font-weight: 900;
+    font-family: 'Arial Black', Arial, sans-serif;
+    color: #ff0040;
+    text-shadow: 
+        0 0 10px #ff0040,
+        0 0 20px #ff0040,
+        0 0 30px #ff0040,
+        0 0 40px #ff0040;
+    z-index: 2;
+    letter-spacing: 6px;
+    animation: livePulseOptimized 1.2s ease-in-out infinite;
+    text-transform: uppercase;
+    will-change: transform;
+}
+
+@keyframes livePulseOptimized {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+}
+
 /* 游戏场景 */
 .game-scene {
     position: absolute;
