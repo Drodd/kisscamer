@@ -1189,6 +1189,41 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('touchmove', (e) => {
         e.preventDefault();
     }, { passive: false });
+    
+    // 禁止页面元素被选中和拖拽
+    document.addEventListener('selectstart', (e) => {
+        e.preventDefault();
+        return false;
+    });
+    
+    document.addEventListener('dragstart', (e) => {
+        e.preventDefault();
+        return false;
+    });
+    
+    // 禁止右键菜单
+    document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        return false;
+    });
+    
+    // 禁止图片拖拽
+    document.addEventListener('dragstart', (e) => {
+        if (e.target.tagName === 'IMG') {
+            e.preventDefault();
+        }
+    });
+    
+    // 禁用F12等开发者工具快捷键（可选）
+    document.addEventListener('keydown', (e) => {
+        // 禁用F12, Ctrl+Shift+I, Ctrl+U等
+        if (e.key === 'F12' || 
+            (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+            (e.ctrlKey && e.key === 'U')) {
+            e.preventDefault();
+            return false;
+        }
+    });
 });
 
 function hideGameElements() {
@@ -1311,6 +1346,11 @@ class LiveIdleAnimation {
     }
     
     startAnimation() {
+        // 防止重复启动动画
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
         this.animate();
     }
     
@@ -1382,6 +1422,8 @@ class LiveIdleAnimation {
     }
     
     show() {
+        // 先停止现有动画，防止重复启动
+        this.stop();
         this.frameCount = 0;
         const idleElement = document.getElementById('liveIdleAnimation');
         if (idleElement) {
@@ -1417,6 +1459,11 @@ class LiveRingAnimation {
     }
     
     startAnimation() {
+        // 防止重复启动动画
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
         this.animate();
     }
     
@@ -1511,6 +1558,8 @@ class LiveRingAnimation {
     }
     
     show() {
+        // 先停止现有动画，防止重复启动
+        this.stop();
         this.frameCount = 0;
         const idleElement = document.getElementById('liveIdleAnimation');
         if (idleElement) {
@@ -1557,9 +1606,12 @@ class AnimationManager {
     }
     
     showAnimation(type) {
-        // 隐藏当前动画
-        if (this.currentAnimation) {
-            this.currentAnimation.hide();
+        // 确保所有动画都先停止
+        if (this.particleAnimation) {
+            this.particleAnimation.hide();
+        }
+        if (this.ringAnimation) {
+            this.ringAnimation.hide();
         }
         
         // 显示新动画
@@ -1569,7 +1621,13 @@ class AnimationManager {
             this.currentAnimation = this.ringAnimation;
         }
         
-        this.currentAnimation.show();
+        // 添加小延迟确保之前的动画完全停止
+        setTimeout(() => {
+            if (this.currentAnimation) {
+                this.currentAnimation.show();
+            }
+        }, 50);
+        
         this.animationType = type;
     }
     
@@ -1594,6 +1652,7 @@ class AnimationManager {
     
     switchOnPush() {
         // 每次推送时切换动画
+        console.log('动画切换：从', this.animationType, '切换到', this.animationType === 'particles' ? 'rings' : 'particles');
         this.switchAnimation();
     }
     

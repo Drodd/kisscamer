@@ -2,6 +2,17 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    /* 禁止选中文本和元素 */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    /* 禁止拖拽 */
+    -webkit-user-drag: none;
+    -moz-user-drag: none;
+    user-drag: none;
+    /* 禁止右键菜单 */
+    -webkit-touch-callout: none;
 }
 
 body {
@@ -14,6 +25,11 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    /* 额外的防选中保护 */
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
 }
 
 /* 固定分辨率容器 */
@@ -954,4 +970,60 @@ body {
 /* 移除原有的取景器边框样式，使用img_cam作为边框 */
 .viewfinder.recording {
     border-color: #ff4444;
+}
+
+/* 防止选中的通用样式 */
+button, 
+.control-btn, 
+.arrow-btn, 
+.push-btn, 
+.start-btn, 
+.restart-btn,
+img,
+.audience-member,
+.viewfinder,
+.live-screen,
+.game-title,
+.task-name,
+.score-display,
+.task-timer {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-user-drag: none !important;
+    -moz-user-drag: none !important;
+    user-drag: none !important;
+    -webkit-touch-callout: none !important;
+}
+
+/* 禁用所有图片的拖拽和选择 */
+img {
+    pointer-events: none;
+    -webkit-user-drag: none !important;
+    -moz-user-drag: none !important;
+    user-drag: none !important;
+}
+
+/* 重新启用按钮的指针事件 */
+button,
+.control-btn,
+.arrow-btn,
+.push-btn,
+.start-btn,
+.restart-btn {
+    pointer-events: auto !important;
+}
+
+/* 防止文本高亮显示 */
+.game-container *::selection {
+    background: transparent;
+}
+
+.game-container *::-moz-selection {
+    background: transparent;
+}
+
+.game-container *::-webkit-selection {
+    background: transparent;
 }
